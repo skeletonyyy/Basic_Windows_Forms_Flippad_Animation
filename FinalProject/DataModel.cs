@@ -14,13 +14,13 @@ namespace FinalProject
     public class StrokeModel
     {
         public List<Point> Points = new List<Point>();
-        public Color StrokeColour;
-        public float StrokeThickness;
+        public Color Colour;
+        public float Thickness;
     }
 
     public class ProjectModel
     {
-        public string ProjectName;
-        public string ProjectFilePath;
+        public string Name;
+        public string FilePath;
     }
 }

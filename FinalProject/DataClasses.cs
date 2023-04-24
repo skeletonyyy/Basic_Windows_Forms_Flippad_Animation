@@ -1,32 +1,58 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Svg;
 
 namespace FinalProject
 {
     public class Frame
     {
-        public int FrameIndex;
-        public string FramePath;
-        public Size FrameSize; // Frame size in pixels
-        public Bitmap FrameBitmap;
-        public int StrokeIndex;
+        public int Index;
+        public string Path;
+        public Size Size; // Frame size in pixels
+        public Bitmap Bitmap;
+        public Color BackColour;
         public List<Stroke> Strokes = new List<Stroke>();
 
-        public Frame(int i, int j, string path, Size size)
+        public Frame(int i, string path, Size size, Color colour)
         {
-            FrameIndex = i;
-            StrokeIndex = j;
-            FramePath = path;
-            FrameSize = size;
+            Index = i;
+            Path = path;
+            Size = size;
+            BackColour = colour;
+            Bitmap = new Bitmap(Size.Width, Size.Height);
+            updateBackColour(BackColour);
+        }
+
+        public void updateBackColour(Color colour)
+        {
+            // Inspired by Anon here: https://www.syncfusion.com/faq/windowsforms/bitmaps-and-images/how-do-i-overlay-one-bitmap-over-another
+            // and Sam Saarian's answer here: https://stackoverflow.com/questions/1720160/how-do-i-fill-a-bitmap-with-a-solid-color
+
+            Bitmap bmp = new Bitmap(Size.Width, Size.Height);
+            using Graphics g = Graphics.FromImage(bmp);
+            g.Clear(colour);
+            Bitmap.MakeTransparent(BackColour);
+            g.DrawImage(Bitmap, 0, 0);
+            Bitmap.Dispose(); // help with bitmap taking too much space.
+            Bitmap = bmp;
+            BackColour = colour;
         }
     }
     public class Stroke : StrokeModel
     {
+        public int Index;
+
+        public Stroke(int i)
+        {
+            Index = i;
+        }
+
         public void addPoint(Point point)
         {
             Points.Add(point);
@@ -36,17 +62,18 @@ namespace FinalProject
     public class Project : ProjectModel
     {
         public string FramesFolderPath;
+        public List<Frame> Frames = new List<Frame>();
 
         /*public Project()
         {
             FramesFolderPath = framesPath;
-            ProjectFilePath = projectPath;
-            ProjectName = name;
+            FilePath = projectPath;
+            Name = name;
         }*/
 
         public bool isEmpty()
         {
-            if (FramesFolderPath == null && ProjectFilePath == null && ProjectName == null)
+            if (FramesFolderPath == null && FilePath == null && Name == null)
             {
                 return true;
             }
@@ -55,8 +82,8 @@ namespace FinalProject
 
         public void changeName(string name)
         {
-            ProjectFilePath = $"{ProjectFilePath.Remove(ProjectFilePath.Length - ProjectName.Length, ProjectName.Length)}{ProjectName}";
-            ProjectName = name;
+            FilePath = $"{FilePath.Remove(FilePath.Length - Name.Length, Name.Length)}{Name}";
+            Name = name;
         }
     }
 }
