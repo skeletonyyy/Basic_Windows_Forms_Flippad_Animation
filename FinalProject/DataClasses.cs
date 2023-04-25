@@ -59,26 +59,14 @@ namespace FinalProject
         }
     }
 
-    public class Project : ProjectModel
+    public class Project
     {
+        public string Name;
+        public string FilePath;
         public string FramesFolderPath;
         public List<Frame> Frames = new List<Frame>();
 
-        /*public Project()
-        {
-            FramesFolderPath = framesPath;
-            FilePath = projectPath;
-            Name = name;
-        }*/
-
-        public bool isEmpty()
-        {
-            if (FramesFolderPath == null && FilePath == null && Name == null)
-            {
-                return true;
-            }
-            return false;
-        }
+        public bool isEmpty() => FramesFolderPath == null && FilePath == null && Name == null;
 
         public void changeName(string name)
         {

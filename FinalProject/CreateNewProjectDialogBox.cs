@@ -75,7 +75,8 @@ namespace FinalProject
 
         public string getFolderPath()
         {
-            var folderDialog = new FolderBrowserDialog();
+            using FolderBrowserDialog folderDialog = new();
+            //var folderDialog = new FolderBrowserDialog();
             folderDialog.ShowDialog();
             return folderDialog.SelectedPath;
         }
