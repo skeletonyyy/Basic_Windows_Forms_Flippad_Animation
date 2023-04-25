@@ -7,9 +7,11 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web.ModelBinding;
 using System.Windows.Forms;
 using Microsoft.VisualBasic;
 using Newtonsoft.Json;
@@ -18,13 +20,14 @@ namespace FinalProject
 {
     public partial class MainForm : Form
     {
-        public Frame currentFrame;
-        public Stroke currentStroke;
+        private Frame _currentFrame;
+        private Stroke _currentStroke;
+        private Project _project = new();
+        private Stack<(Bitmap, Stroke)> _undoStack = new();
+        private Stack<(Bitmap, Stroke)> _redoStack = new();
         public Size FrameSize;
-        public Project Project = new();
         public bool IsDrawing;
         public bool UpdateBack;
-
         public MainForm()
         {
             InitializeComponent();
@@ -32,11 +35,10 @@ namespace FinalProject
             buttonPickColour.BackColor = Color.Black;
             buttonBackground.BackColor = Color.White;
             tableLayoutFrameSettings.Visible = false;
-            Text = "GiFLIP!";
-            
-            currentStroke = new(0);
-            currentStroke.Colour = Color.Black;
-            currentStroke.Thickness = 1;
+
+            _currentStroke = new(0);
+            _currentStroke.Colour = Color.Black;
+            _currentStroke.Thickness = 1;
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -55,14 +57,14 @@ namespace FinalProject
 
         private void saveFrameMenuItem_Click(object sender, EventArgs e)
         {
-            if (Project.Frames.Count != 0)
+            if (_project.Frames.Count != 0)
             {
-                SaveFrame(Project.Frames[currentFrame.Index]);
+                SaveFrame(_project.Frames[_currentFrame.Index]);
             }
             else
             {
                 MessageBox.Show("There are no frames to save.",
-                    "Error: No Frames in Project",
+                    "Error: No Frames in _project",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
@@ -70,12 +72,12 @@ namespace FinalProject
 
         private void saveProjectMenuItem_Click(object sender, EventArgs e)
         {
-            if (!Project.isEmpty())
+            if (!_project.isEmpty())
                 SaveProject();
             else
             {
                 MessageBox.Show("Please start a project before saving it.",
-                    "Error: No Project Started", 
+                    "Error: No _project Started", 
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
@@ -83,17 +85,62 @@ namespace FinalProject
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenProject();
-        }
+            using OpenFileDialog fileDialog = new();
+            fileDialog.Filter = "JSON Files|*.json";
+            fileDialog.Title = "Choose a Project File to Open";
+            fileDialog.ShowDialog();
 
-        private void redoMenuItem_Click(object sender, EventArgs e)
-        {
-
+            if (fileDialog.FileNames.Length == 1 && !string.IsNullOrEmpty(fileDialog.FileName))
+            {
+                _project = JsonConvert.DeserializeObject<Project>(File.ReadAllText(fileDialog.FileName),
+                    new SizeConverter(), new BitmapConverter(), new ColorConverter(), new PointConverter());
+                _currentFrame = _project.Frames.Last();
+                _currentStroke = _currentFrame.Strokes.Last();
+                FrameSize = _currentFrame.Size;
+                foreach (var frame in _project.Frames)
+                {
+                    _currentFrame = frame;
+                    Invalidate();
+                }
+                mainPictureBox.Size = FrameSize;
+                projectNameLabel.Text = $"Project: {_project.Name}";
+                tableLayoutFrameSettings.Visible = true;
+                UpdatePictureFrame(_currentFrame);
+                updateFrameCount();
+            }
+            else
+            {
+                MessageBox.Show("Please select one (1) file.",
+                    "Error: Wrong Path Selected",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
 
         private void undoMenuItem_Click(object sender, EventArgs e)
         {
+            if (_undoStack.Count > 0)
+            {
+                (Bitmap, Stroke) bmp = _undoStack.Pop();
+                _redoStack.Push(bmp);
+                _currentFrame.Bitmap = bmp.Item1;
+                _currentFrame.Strokes.Remove(bmp.Item2);
+                _currentStroke = _currentFrame.Strokes.Last();
+                UpdatePictureFrame(_currentFrame);
+            }
+        }
 
+        private void redoMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_redoStack.Count > 0)
+            {
+                (Bitmap, Stroke) bmp = _redoStack.Pop();
+                _redoStack.Push(bmp);
+                _currentFrame.Bitmap = bmp.Item1;
+                _currentFrame.Strokes.Add(bmp.Item2);
+                _currentStroke = _currentFrame.Strokes.Last();
+                UpdatePictureFrame(_currentFrame);
+            }
         }
 
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -102,28 +149,28 @@ namespace FinalProject
 
         private void newFrameButton_Click(object sender, EventArgs e)
         {
-            if (!Project.isEmpty())
+            _redoStack.Clear();
+            if (!_project.isEmpty())
             {
-                // make bitmap for drawing, link it to the picturebox, and save it as .gif
-                var frame = new Frame(Project.Frames.Count(),
-                    $@"{Project.FramesFolderPath}\\{Project.Frames.Count()}.gif",
+                var frame = new Frame(_project.Frames.Count(),
+                    $@"{_project.FramesFolderPath}\\{_project.Frames.Count()}.gif",
                     FrameSize,
                     buttonBackground.BackColor);
 
-                currentFrame = frame;
-                Project.Frames.Add(frame);
-                currentFrame.Index = frame.Index; // currentFrameIndex is the index of the frame in Frames[]
+                _currentFrame = frame;
+                _project.Frames.Add(frame);
+                _currentFrame.Index = frame.Index; // currentFrameIndex is the index of the frame in Frames[]
                 UpdatePictureFrame(frame);
                 updateFrameCount();
-                if (currentFrame.Index > 0)
+                if (_currentFrame.Index > 0)
                 {
-                    SaveFrame(Project.Frames[currentFrame.Index - 1]);
+                    SaveFrame(_project.Frames[_currentFrame.Index - 1]);
                 }
             }
             else
             {
                 MessageBox.Show("You cannot create a frame without starting a project.",
-                    "Error: Must Create Project",
+                    "Error: Must Create _project",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
@@ -133,21 +180,21 @@ namespace FinalProject
         {
             using ColorDialog colourDialog = new(); 
             colourDialog.ShowDialog();
-            currentStroke.Colour = colourDialog.Color;
+            _currentStroke.Colour = colourDialog.Color;
             buttonPickColour.BackColor = colourDialog.Color;
         }
 
         private void buttonBackground_Click(object sender, EventArgs e)
         {
-            if (currentFrame != null)
+            if (_currentFrame != null)
             {
                 using ColorDialog colourDialog = new();
                 colourDialog.ShowDialog();
                 buttonBackground.BackColor = colourDialog.Color;
                 if (UpdateBack)
                 {
-                    currentFrame.updateBackColour(colourDialog.Color);
-                    UpdatePictureFrame(currentFrame);
+                    _currentFrame.updateBackColour(colourDialog.Color);
+                    UpdatePictureFrame(_currentFrame);
                 }
             }
             else
@@ -173,56 +220,97 @@ namespace FinalProject
                 "in your drawing, IT WILL BE RESET TO THE BACKGROUND'S COLOUR.");
         }
 
+        private void previousFrameButton_Click(object sender, EventArgs e)
+        {
+            if (_currentFrame.Index > 0)
+            {
+                changeFrame(int.Parse(frameNumber.Text) - 2);
+            }
+            else
+            {
+                raiseErrorMessage("Invalid Frame Index", "Frame indices begin at 1.");
+            }
+        }
+
+        private void frameNumber_Leave(object sender, EventArgs e)
+        {
+            var index = 0;
+            if (int.TryParse(frameNumber.Text, out index))
+            {
+                changeFrame(index - 2);
+            }
+            else
+            {
+                raiseErrorMessage("Invalid Frame Index", "You did not put in a number, did you? Yeah, maybe I should've" +
+                                                         " mentioned that we are using arabic numbers for the frames' indices.");
+            }
+        }
+
+        private void nextFrameButton_Click(object sender, EventArgs e)
+        {
+            if (_currentFrame.Index < _project.Frames.Count - 1)
+            {
+                changeFrame(int.Parse(frameNumber.Text));
+            }
+            else
+            {
+                raiseErrorMessage("Invalid Frame Index", $"Your index is too large! Your project currently has " +
+                                                         $"{_project.Frames.Count} frames.");
+            }
+        }
+
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
         //      Drawing Controls
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
         private void mainPictureBox_MouseDown(object sender, MouseEventArgs e)
         {
-            if (Project.Frames.Count > 0)
+            _redoStack.Clear();
+            if (_project.Frames.Count > 0)
             {
                 IsDrawing = true;
                 var origin = mainPictureBox.PointToScreen(new Point(0, 0));
                 var point = new Point(MousePosition.X - origin.X, MousePosition.Y - origin.Y);
-                currentStroke = new Stroke(currentFrame.Strokes.Count)
+                _currentStroke = new Stroke(_currentFrame.Strokes.Count)
                 {
                     // NOTE: MUST CHANGE THE CURRENT DEFAULTS
                     Colour = buttonPickColour.BackColor,
                     Thickness = 10,
                 };
-                currentStroke.addPoint(point);
-                currentFrame.Strokes.Add(currentStroke);
+                _currentStroke.addPoint(point);
+                _currentFrame.Strokes.Add(_currentStroke);
             }
         }
 
         private void mainPictureBox_MouseMove(object sender, MouseEventArgs e)
         {
-            if (Project.Frames.Count > 0 && IsDrawing)
+            if (_project.Frames.Count > 0 && IsDrawing)
             { 
                 var origin = mainPictureBox.PointToScreen(new Point(0, 0));
                 var point = new Point(MousePosition.X - origin.X, MousePosition.Y - origin.Y);
-                currentStroke.addPoint(point);
-                UpdatePictureFrame(currentFrame);
+                _currentStroke.addPoint(point);
+                UpdatePictureFrame(_currentFrame);
             }
         }
 
         private void mainPictureBox_MouseUp(object sender, MouseEventArgs e)
         {
-            if (Project.Frames.Count > 0 && IsDrawing)
+            if (_project.Frames.Count > 0 && IsDrawing)
             {
                 var origin = mainPictureBox.PointToScreen(new Point(0, 0));
                 var point = new Point(MousePosition.X - origin.X, MousePosition.Y - origin.Y);
-                currentStroke.addPoint(point);
+                _currentStroke.addPoint(point);
                 IsDrawing = false;
-                UpdatePictureFrame(currentFrame);
+                _currentStroke = new Stroke(0); // deselect the stroke
+                UpdatePictureFrame(_currentFrame);
             }
         }
         private void mainPictureBox_Paint(object sender, PaintEventArgs e)
         {
-            if (currentFrame != null)
+            if (_currentFrame != null)
             {
-                foreach (var stroke in currentFrame.Strokes)
+                foreach (var stroke in _currentFrame.Strokes)
                 {
-                    using Graphics g = Graphics.FromImage(currentFrame.Bitmap);
+                    using Graphics g = Graphics.FromImage(_currentFrame.Bitmap);
                     using var pen = new Pen(stroke.Colour, stroke.Thickness)
                     {
                         // I was having issues with the strokes being distorted, and Mike gracefully
@@ -237,6 +325,7 @@ namespace FinalProject
                         g.DrawLine(pen, stroke.Points[i], stroke.Points[i + 1]);
                     }
                 }
+                _undoStack.Push((_currentFrame.Bitmap, _currentStroke));
             }
         }
 
@@ -258,12 +347,11 @@ namespace FinalProject
                 !newProjectDialog.FrameSize.IsEmpty)
                 //Ensure that we are not returning some kind of empty data
             {
-                Project.FramesFolderPath = newProjectDialog.FramesFolderPath;
-                Project.FilePath = $@"{newProjectDialog.ProjectFolderPath}\\{newProjectDialog.ProjectName}.json";
-                Project.Name = newProjectDialog.ProjectName;
+                _project.FramesFolderPath = newProjectDialog.FramesFolderPath;
+                _project.FilePath = $@"{newProjectDialog.ProjectFolderPath}\\{newProjectDialog.ProjectName}.json";
+                _project.Name = newProjectDialog.ProjectName;
                 FrameSize = newProjectDialog.FrameSize;
-                Text = $"Flip-a-Gif!";
-                projectNameLabel.Text = Project.Name;
+                projectNameLabel.Text = _project.Name;
                 mainPictureBox.Size = FrameSize;
 
                 newFrameButton.PerformClick();
@@ -275,7 +363,11 @@ namespace FinalProject
         /// <summary>
         /// Updates the total number of frames and the current frame the user is using.
         /// </summary>
-        private void updateFrameCount() => frameCountLabel.Text = $"Frame: {currentFrame.Index}";
+        private void updateFrameCount()
+        {
+            frameCountLabel.Text = $"Frame: {_currentFrame.Index + 1}";
+            frameNumber.Text = $"{_currentFrame.Index + 1}";
+        }
 
         /// <summary>
         /// Save the current frame to the predetermined folder where all frames are saved. It will
@@ -289,8 +381,8 @@ namespace FinalProject
         /// </summary>
         private void SaveProject()
         {
-            SaveFrame(currentFrame);
-            File.WriteAllText(Project.FilePath, JsonConvert.SerializeObject(Project, Formatting.Indented, 
+            SaveFrame(_currentFrame);
+            File.WriteAllText(_project.FilePath, JsonConvert.SerializeObject(_project, Formatting.Indented, 
                 new SizeConverter(), new BitmapConverter(), new ColorConverter(), new PointConverter()));
         }
 
@@ -305,37 +397,47 @@ namespace FinalProject
         }
 
         /// <summary>
-        /// Open a previously created project.
+        /// Raise an dialog with an error icon and a message.
         /// </summary>
-        private void OpenProject()
+        /// <param name="title"></param>
+        /// <param name="message"></param>
+        public void raiseErrorMessage(string title, string message)
         {
-            using OpenFileDialog fileDialog = new();
-            fileDialog.Filter = "JSON Files|*.json";
-            fileDialog.Title = "Choose a Project File to Open";
-            fileDialog.ShowDialog();
+            MessageBox.Show(message,
+                $"Error: {title}",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
+        }
 
-            if (fileDialog.FileNames.Length == 1 && !string.IsNullOrEmpty(fileDialog.FileName))
+        /// <summary>
+        /// Changes the current frame to the frame at the given index. Note that the user-inputed indices begin at 1 and not 0,
+        /// which is taken into account int this function.
+        /// </summary>
+        /// <param name="index"></param>
+        public void changeFrame(int index)
+        {
+            if (index >= 0 && index < _project.Frames.Count)
             {
-                Project = JsonConvert.DeserializeObject<Project>(File.ReadAllText(fileDialog.FileName),
-                    new SizeConverter(), new BitmapConverter(), new ColorConverter(), new PointConverter());
-                currentFrame = Project.Frames.Last();
-                currentStroke = currentFrame.Strokes.Last();
-                FrameSize = currentFrame.Size;
-                foreach (var frame in Project.Frames)
-                {
-                    currentFrame = frame;
-                    Invalidate();
-                }
-                mainPictureBox.Size = FrameSize;
-                projectNameLabel.Text = $"Project: {Project.Name}";
-                UpdatePictureFrame(currentFrame);
+                _currentFrame = _project.Frames[index];
+                updateFrameCount();
+                UpdatePictureFrame(_currentFrame);
             }
             else
             {
-                MessageBox.Show("Please select one (1) file.",
-                    "Error: Wrong Path Selected",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                raiseErrorMessage("Invalid Frame Index", "Your frame index is invalid.");
+            }
+        }
+
+        private void refreshMenuItem_Click(object sender, EventArgs e)
+        {
+            Invalidate();
+        }
+
+        private void frameNumber_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.Equals(ConsoleKey.Enter))
+            {
+                
             }
         }
     }

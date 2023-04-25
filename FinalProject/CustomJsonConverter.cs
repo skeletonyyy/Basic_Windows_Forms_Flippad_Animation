@@ -53,7 +53,8 @@ namespace FinalProject
         public override Bitmap ReadJson(JsonReader reader, Type objecType, Bitmap existingValue, bool hasExistingValue,
             JsonSerializer serializer)
         {
-            // Bitmap conversion by Mike Perrenoud: https://stackoverflow.com/questions/21555394/how-to-create-bitmap-from-byte-array
+            // Bitmap conversion from byte[] to Bitmap by Mike Perrenoud:
+            // https://stackoverflow.com/questions/21555394/how-to-create-bitmap-from-byte-array
             string str = (string)reader.Value;
             string[] strArr = str.Split('/');
             byte[] byteArr = new byte[strArr.Length];
@@ -67,6 +68,14 @@ namespace FinalProject
                 bitmap = new Bitmap(ms);
             }
             return new Bitmap(bitmap);
+
+            /*  Also this is unrelated to this project but I just want to record this in history somewhere.
+                Opening the file has been a MASSIVE hassle, especially because of the bitmap and I spend the better of two
+                days. It finally worked when an amazing solo started on a show I was listening on the side because I was 
+                feeling nostalgic and it was just perfect. To make things even better, the name of the song it "Work This
+                Time". It was as if the stars aligned and gave me life. I will run on this high for as long as it lasts.
+                The solo in question: https://youtu.be/M09muNZNP6A?t=5716. That show was magical.
+            */
         }
     }
 
