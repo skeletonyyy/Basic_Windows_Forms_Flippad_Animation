@@ -86,6 +86,16 @@ namespace FinalProject
             OpenProject();
         }
 
+        private void redoMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void undoMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
         //      Frame menu items
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -314,10 +324,9 @@ namespace FinalProject
                 foreach (var frame in Project.Frames)
                 {
                     currentFrame = frame;
-                    //frame.Bitmap = Bitmap.FromFile(Image.FromFile(currentFrame.Path));
                     Invalidate();
                 }
-
+                mainPictureBox.Size = FrameSize;
                 projectNameLabel.Text = $"Project: {Project.Name}";
                 UpdatePictureFrame(currentFrame);
             }

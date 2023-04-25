@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,18 +31,42 @@ namespace FinalProject
 
     public class BitmapConverter : JsonConverter<Bitmap>
     {
-        // I have no idea how to convert the Bitmap into text and I feel like storing every byte into an array might get
-        // long... instead I'm thinking that when we deserialize the .json file, we simply create a template bitmap and
-        // assign recreate it using the .gif images we've been saving.
         public override void WriteJson(JsonWriter writer, Bitmap value, JsonSerializer serializer)
         {
-            writer.WriteValue("bitmap:)");
+            byte[] byteArr;
+            using (var ms = new MemoryStream())
+            {
+                value.Save(ms, ImageFormat.Gif);
+                byteArr = ms.ToArray();
+            }
+
+            string str = "";
+            for (var i = 0; i < byteArr.Length; i++)
+            {
+                str += $"{byteArr[i]}/";
+            }
+
+            str = str.Remove(str.Length - 1);
+            writer.WriteValue(str);
         }
 
         public override Bitmap ReadJson(JsonReader reader, Type objecType, Bitmap existingValue, bool hasExistingValue,
             JsonSerializer serializer)
         {
-            return new Bitmap(480, 480);
+            // Bitmap conversion by Mike Perrenoud: https://stackoverflow.com/questions/21555394/how-to-create-bitmap-from-byte-array
+            string str = (string)reader.Value;
+            string[] strArr = str.Split('/');
+            byte[] byteArr = new byte[strArr.Length];
+            for (int i = 0; i < strArr.Length; i++)
+            {
+                byteArr[i] = byte.Parse(strArr[i]);
+            }
+            Bitmap bitmap;
+            using (var ms = new MemoryStream(byteArr))
+            {
+                bitmap = new Bitmap(ms);
+            }
+            return new Bitmap(bitmap);
         }
     }
 
