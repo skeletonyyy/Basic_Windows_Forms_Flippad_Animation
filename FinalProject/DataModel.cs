@@ -17,4 +17,10 @@ namespace FinalProject
         public Color Colour;
         public float Thickness;
     }
+
+    public class ProjectModel
+    {
+        public string Name;
+        public string FilePath;
+    }
 }

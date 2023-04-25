@@ -82,7 +82,6 @@
     <Compile Include="CreateNewProjectDialogBox.Designer.cs">
       <DependentUpon>CreateNewProjectDialogBox.cs</DependentUpon>
     </Compile>
-    <Compile Include="CustomJsonConverter.cs" />
     <Compile Include="DataClasses.cs" />
     <Compile Include="DataModel.cs" />
     <Compile Include="MainForm.cs">
