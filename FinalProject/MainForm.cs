@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
@@ -11,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.VisualBasic;
+using Newtonsoft.Json;
 
 namespace FinalProject
 {
@@ -30,6 +32,7 @@ namespace FinalProject
             buttonPickColour.BackColor = Color.Black;
             buttonBackground.BackColor = Color.White;
             tableLayoutFrameSettings.Visible = false;
+            Text = "GiFLIP!";
             
             currentStroke = new(0);
             currentStroke.Colour = Color.Black;
@@ -42,34 +45,70 @@ namespace FinalProject
         }
 
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        //      Tool strip items
+        //         Menu items
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        private void newProjectToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            NewProject();
+        }
+
+        private void saveFrameMenuItem_Click(object sender, EventArgs e)
+        {
+            if (Project.Frames.Count != 0)
+            {
+                SaveFrame(Project.Frames[currentFrame.Index]);
+            }
+            else
+            {
+                MessageBox.Show("There are no frames to save.",
+                    "Error: No Frames in Project",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        private void saveProjectMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!Project.isEmpty())
+                SaveProject();
+            else
+            {
+                MessageBox.Show("Please start a project before saving it.",
+                    "Error: No Project Started", 
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
+            OpenProject();
         }
+
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        //      Frame menu items
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
         private void newFrameButton_Click(object sender, EventArgs e)
         {
-            if (Project.isEmpty())
-            {
-                NewProject();
-            }
-
             if (!Project.isEmpty())
             {
                 // make bitmap for drawing, link it to the picturebox, and save it as .gif
-                var frame = new Frame(Project.Frames.Count() + 1,
-                    $@"{Project.FramesFolderPath}\\{Project.Frames.Count() + 1}.gif",
+                var frame = new Frame(Project.Frames.Count(),
+                    $@"{Project.FramesFolderPath}\\{Project.Frames.Count()}.gif",
                     FrameSize,
                     buttonBackground.BackColor);
 
                 currentFrame = frame;
                 Project.Frames.Add(frame);
-                currentFrame.Index = frame.Index - 1; // currentFrameIndex is the index of the frame in Frames[]
+                currentFrame.Index = frame.Index; // currentFrameIndex is the index of the frame in Frames[]
                 UpdatePictureFrame(frame);
                 updateFrameCount();
+                if (currentFrame.Index > 0)
+                {
+                    SaveFrame(Project.Frames[currentFrame.Index - 1]);
+                }
             }
             else
             {
@@ -78,16 +117,7 @@ namespace FinalProject
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
-
-            if (Project.Frames.Count > 1)
-            {
-                SaveFrame(Project.Frames[currentFrame.Index - 1]);
-            }
         }
-
-        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        //      Frame menu items
-        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
         private void buttonPickColour_Click(object sender, EventArgs e)
         {
@@ -126,15 +156,16 @@ namespace FinalProject
 
         private void checkBoxUpdateBackground_MouseHover(object sender, EventArgs e)
         {
-            toolTip1.SetToolTip(checkBoxUpdateBackground, "Checked: Updates the background of the current frame and the next created frames.\n " +
-                                                          "Unchecked: Will be the background of the next frame created.\n" +
-                                                          "NOTE: If you check the box and you used the same colour as your background " +
-                                                          "in your drawing, IT WILL BE RESET TO THE BACKGROUND'S COLOUR.");
+            toolTipUpdateBackgroud.SetToolTip(checkBoxUpdateBackground, 
+                "Checked: Updates the background of the current frame and the next created frames.\n " +
+                "Unchecked: Will be the background of the next frame created.\n" +
+                "NOTE: If you check the box and you used the same colour as your background " +
+                "in your drawing, IT WILL BE RESET TO THE BACKGROUND'S COLOUR.");
         }
 
-        // ~~~~~~~~~~~~~~~~~~~
-        //       Drawing 
-        // ~~~~~~~~~~~~~~~~~~~
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        //      Drawing Controls
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
         private void mainPictureBox_MouseDown(object sender, MouseEventArgs e)
         {
             if (Project.Frames.Count > 0)
@@ -182,32 +213,20 @@ namespace FinalProject
                 foreach (var stroke in currentFrame.Strokes)
                 {
                     using Graphics g = Graphics.FromImage(currentFrame.Bitmap);
-                    using var pen = new Pen(stroke.Colour, stroke.Thickness);
+                    using var pen = new Pen(stroke.Colour, stroke.Thickness)
+                    {
+                        // I was having issues with the strokes being distorted, and Mike gracefully
+                        // helped me and showed me that we can do this and it might fix it, which it did!
+                        // He deserves an extra 5% just for helping me out.
+                        LineJoin = LineJoin.Round,
+                        EndCap = LineCap.Round,
+                        StartCap = LineCap.Round
+                    };
                     for (int i = 0; i < stroke.Points.Count - 1; i++)
                     {
                         g.DrawLine(pen, stroke.Points[i], stroke.Points[i + 1]);
                     }
                 }
-            }
-        }
-
-        private void newProjectToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            NewProject();
-        }
-
-        private void saveFrameMenuItem_Click(object sender, EventArgs e)
-        {
-            if (Project.Frames.Count != 0)
-            {
-                SaveFrame(Project.Frames[currentFrame.Index]);
-            }
-            else
-            {
-                MessageBox.Show("There are no frames to save.",
-                    "Error: No Frames in Project",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
             }
         }
 
@@ -230,10 +249,11 @@ namespace FinalProject
                 //Ensure that we are not returning some kind of empty data
             {
                 Project.FramesFolderPath = newProjectDialog.FramesFolderPath;
-                Project.FilePath = $"{newProjectDialog.ProjectFolderPath}\\{newProjectDialog.ProjectName}.json";
+                Project.FilePath = $@"{newProjectDialog.ProjectFolderPath}\\{newProjectDialog.ProjectName}.json";
                 Project.Name = newProjectDialog.ProjectName;
                 FrameSize = newProjectDialog.FrameSize;
-
+                Text = $"Flip-a-Gif!";
+                projectNameLabel.Text = Project.Name;
                 mainPictureBox.Size = FrameSize;
 
                 newFrameButton.PerformClick();
@@ -255,6 +275,16 @@ namespace FinalProject
         private void SaveFrame(Frame frame) => frame.Bitmap.Save(frame.Path, ImageFormat.Gif);
 
         /// <summary>
+        /// Save the project. This will save the data for the strokes, frames, and the bitmaps.
+        /// </summary>
+        private void SaveProject()
+        {
+            SaveFrame(currentFrame);
+            File.WriteAllText(Project.FilePath, JsonConvert.SerializeObject(Project, Formatting.Indented, 
+                new SizeConverter(), new BitmapConverter(), new ColorConverter(), new PointConverter()));
+        }
+
+        /// <summary>
         /// Updates mainPictureBox to what was drawn on the bitmap.
         /// </summary>
         /// <param name="frame"></param>
@@ -262,6 +292,42 @@ namespace FinalProject
         {
             mainPictureBox.Image = frame.Bitmap;
             mainPictureBox.Invalidate();
+        }
+
+        /// <summary>
+        /// Open a previously created project.
+        /// </summary>
+        private void OpenProject()
+        {
+            using OpenFileDialog fileDialog = new();
+            fileDialog.Filter = "JSON Files|*.json";
+            fileDialog.Title = "Choose a Project File to Open";
+            fileDialog.ShowDialog();
+
+            if (fileDialog.FileNames.Length == 1 && !string.IsNullOrEmpty(fileDialog.FileName))
+            {
+                Project = JsonConvert.DeserializeObject<Project>(File.ReadAllText(fileDialog.FileName),
+                    new SizeConverter(), new BitmapConverter(), new ColorConverter(), new PointConverter());
+                currentFrame = Project.Frames.Last();
+                currentStroke = currentFrame.Strokes.Last();
+                FrameSize = currentFrame.Size;
+                foreach (var frame in Project.Frames)
+                {
+                    currentFrame = frame;
+                    frame.Bitmap = Bitmap.FromFile(Image.FromFile(currentFrame.Path));
+                    Invalidate();
+                }
+
+                projectNameLabel.Text = $"Project: {Project.Name}";
+                UpdatePictureFrame(currentFrame);
+            }
+            else
+            {
+                MessageBox.Show("Please select one (1) file.",
+                    "Error: Wrong Path Selected",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
     }
 }
