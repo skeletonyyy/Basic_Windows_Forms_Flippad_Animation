@@ -67,6 +67,7 @@ namespace FinalProject
         public string Name;
         public string FilePath;
         public string FramesFolderPath;
+        public int FrameSpeed;
         public List<Frame> Frames = new List<Frame>();
 
         public bool isEmpty() => FramesFolderPath == null && FilePath == null && Name == null;

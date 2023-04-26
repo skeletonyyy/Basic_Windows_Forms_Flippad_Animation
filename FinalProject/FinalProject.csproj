@@ -35,6 +35,9 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AnimatedGif, Version=1.0.5.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\AnimatedGif.1.0.5\lib\netstandard2.0\AnimatedGif.dll</HintPath>
+    </Reference>
     <Reference Include="ExCSS, Version=4.2.0.0, Culture=neutral, PublicKeyToken=bdbe16be9b936b9a, processorArchitecture=MSIL">
       <HintPath>..\packages\ExCSS.4.2.0\lib\netstandard2.0\ExCSS.dll</HintPath>
     </Reference>
@@ -53,6 +56,9 @@
       <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
     </Reference>
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing.Common, Version=7.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Drawing.Common.7.0.0\lib\net462\System.Drawing.Common.dll</HintPath>
+    </Reference>
     <Reference Include="System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll</HintPath>
     </Reference>
@@ -76,10 +82,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CreateNewProjectDialogBox.cs">
+    <Compile Include="customDialogs\CreateNewProjectDialogBox.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="CreateNewProjectDialogBox.Designer.cs">
+    <Compile Include="customDialogs\CreateNewProjectDialogBox.Designer.cs">
       <DependentUpon>CreateNewProjectDialogBox.cs</DependentUpon>
     </Compile>
     <Compile Include="CustomJsonConverter.cs" />
@@ -96,7 +102,7 @@
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="CreateNewProjectDialogBox.resx">
+    <EmbeddedResource Include="customDialogs\CreateNewProjectDialogBox.resx">
       <DependentUpon>CreateNewProjectDialogBox.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">

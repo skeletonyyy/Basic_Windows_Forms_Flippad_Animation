@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using AnimatedGif;
 using Newtonsoft.Json;
 
 namespace FinalProject
@@ -18,6 +19,7 @@ namespace FinalProject
         public Size FrameSize;
         public bool IsDrawing;
         public bool UpdateBack;
+
         public MainForm()
         {
             InitializeComponent();
@@ -137,6 +139,18 @@ namespace FinalProject
                 _currentFrame.updateBackColour(_currentFrame.BackColour);
                 UpdatePictureFrame(_currentFrame);
                 mainPictureBox.Image = _currentFrame.Bitmap;
+            }
+        }
+
+        private void exportToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveProject();
+            using (var gif = new AnimatedGifCreator(_project.FilePath.Replace(".json", ".gif"), _project.FrameSpeed))
+            {
+                foreach (var frame in _project.Frames)
+                {
+                    gif.AddFrame(frame.Path, delay: -1, quality: GifQuality.Bit8);
+                }
             }
         }
 
@@ -263,6 +277,11 @@ namespace FinalProject
             {
                 tableLayoutPanel1.Focus();
             }
+
+            if (frameSpeedTick.Focused)
+            {
+                tableLayoutPanel1.Focus();
+            }
         }
 
         private void tableLayoutFrameSettings_Click(object sender, EventArgs e)
@@ -272,6 +291,24 @@ namespace FinalProject
             {
                 tableLayoutPanel1.Focus();
             }
+
+            if (frameSpeedTick.Focused)
+            {
+                tableLayoutPanel1.Focus();
+            }
+        }
+
+        private void frameSpeedTick_ValueChanged(object sender, EventArgs e)
+        {
+            _project.FrameSpeed = (int)frameSpeedTick.Value;
+        }
+
+        private void label3_MouseHover(object sender, EventArgs e)
+        {
+            toolTipFrameSpeed.SetToolTip(label3,
+                "The frame speed is in ms (milliseconds).\n\n" +
+                "32 ms = 30 fps\n" +
+                "16 ms = 60 fps");
         }
 
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
