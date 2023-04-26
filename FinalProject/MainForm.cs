@@ -195,6 +195,11 @@ namespace FinalProject
             buttonPickColour.BackColor = colourDialog.Color;
         }
 
+        private void thicknessTick_ValueChanged(object sender, EventArgs e)
+        {
+            _currentStroke.Thickness = (int)thicknessTick.Value;
+        }
+
         private void buttonBackground_Click(object sender, EventArgs e)
         {
             if (_currentFrame != null)
@@ -326,7 +331,7 @@ namespace FinalProject
                 {
                     // NOTE: MUST CHANGE THE CURRENT DEFAULTS
                     Colour = buttonPickColour.BackColor,
-                    Thickness = 10,
+                    Thickness = _currentStroke.Thickness
                 };
                 _currentStroke.addPoint(point);
                 _currentFrame.Strokes.Add(_currentStroke);

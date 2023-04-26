@@ -63,8 +63,8 @@
             this.checkBoxUpdateBackground = new System.Windows.Forms.CheckBox();
             this.thicknessTick = new System.Windows.Forms.NumericUpDown();
             this.label2 = new System.Windows.Forms.Label();
-            this.frameSpeedTick = new System.Windows.Forms.NumericUpDown();
             this.label3 = new System.Windows.Forms.Label();
+            this.frameSpeedTick = new System.Windows.Forms.NumericUpDown();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.projectNameLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.frameCountLabel = new System.Windows.Forms.ToolStripStatusLabel();
@@ -288,10 +288,10 @@
             this.tableLayoutFrameSettings.Controls.Add(this.labelBackground, 0, 3);
             this.tableLayoutFrameSettings.Controls.Add(this.buttonBackground, 1, 3);
             this.tableLayoutFrameSettings.Controls.Add(this.checkBoxUpdateBackground, 2, 3);
-            this.tableLayoutFrameSettings.Controls.Add(this.thicknessTick, 1, 2);
             this.tableLayoutFrameSettings.Controls.Add(this.label2, 0, 2);
             this.tableLayoutFrameSettings.Controls.Add(this.label3, 0, 5);
             this.tableLayoutFrameSettings.Controls.Add(this.frameSpeedTick, 2, 5);
+            this.tableLayoutFrameSettings.Controls.Add(this.thicknessTick, 2, 2);
             this.tableLayoutFrameSettings.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutFrameSettings.Location = new System.Drawing.Point(3, 3);
             this.tableLayoutFrameSettings.Name = "tableLayoutFrameSettings";
@@ -406,11 +406,27 @@
             // 
             // thicknessTick
             // 
-            this.thicknessTick.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.thicknessTick.Location = new System.Drawing.Point(183, 123);
+            this.thicknessTick.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.thicknessTick.Location = new System.Drawing.Point(235, 123);
+            this.thicknessTick.Maximum = new decimal(new int[] {
+            50,
+            0,
+            0,
+            0});
+            this.thicknessTick.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
             this.thicknessTick.Name = "thicknessTick";
-            this.thicknessTick.Size = new System.Drawing.Size(46, 31);
+            this.thicknessTick.Size = new System.Drawing.Size(112, 31);
             this.thicknessTick.TabIndex = 10;
+            this.thicknessTick.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.thicknessTick.ValueChanged += new System.EventHandler(this.thicknessTick_ValueChanged);
             // 
             // label2
             // 
@@ -421,6 +437,17 @@
             this.label2.Size = new System.Drawing.Size(174, 50);
             this.label2.TabIndex = 11;
             this.label2.Text = "Stroke Thickness";
+            // 
+            // label3
+            // 
+            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(3, 304);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(174, 25);
+            this.label3.TabIndex = 13;
+            this.label3.Text = "Gif frame speed";
+            this.label3.MouseHover += new System.EventHandler(this.label3_MouseHover);
             // 
             // frameSpeedTick
             // 
@@ -445,17 +472,6 @@
             0,
             0});
             this.frameSpeedTick.ValueChanged += new System.EventHandler(this.frameSpeedTick_ValueChanged);
-            // 
-            // label3
-            // 
-            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(3, 304);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(174, 25);
-            this.label3.TabIndex = 13;
-            this.label3.Text = "Gif frame speed";
-            this.label3.MouseHover += new System.EventHandler(this.label3_MouseHover);
             // 
             // statusStrip1
             // 
