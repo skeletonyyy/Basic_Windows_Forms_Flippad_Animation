@@ -121,7 +121,7 @@ namespace FinalProject
                 _currentFrame.Bitmap = new Bitmap(FrameSize.Width, FrameSize.Height);
                 _currentFrame.updateBackColour(_currentFrame.BackColour);
                 UpdatePictureFrame(_currentFrame);
-                //mainPictureBox.Image = _currentFrame.Bitmap;
+                mainPictureBox.Image = _currentFrame.Bitmap;
             }
         }
 
@@ -136,7 +136,7 @@ namespace FinalProject
                 _currentFrame.Bitmap = new Bitmap(FrameSize.Width, FrameSize.Height);
                 _currentFrame.updateBackColour(_currentFrame.BackColour);
                 UpdatePictureFrame(_currentFrame);
-                //mainPictureBox.Image = _currentFrame.Bitmap;
+                mainPictureBox.Image = _currentFrame.Bitmap;
             }
         }
 
