@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,6 +19,8 @@ namespace FinalProject
         public Bitmap Bitmap;
         public Color BackColour;
         public List<Stroke> Strokes = new List<Stroke>();
+        public Stack<Stroke> UndoStack = new();
+        public Stack<Stroke> RedoStack = new();
 
         public Frame(int i, string path, Size size, Color colour)
         {
@@ -39,7 +42,7 @@ namespace FinalProject
             g.Clear(colour);
             Bitmap.MakeTransparent(BackColour);
             g.DrawImage(Bitmap, 0, 0);
-            Bitmap.Dispose(); // help with bitmap taking too much space.
+            Bitmap.Dispose(); // help with bitmap taking too much space. Things kept braking with "using" ¯\_(ツ)_/¯
             Bitmap = bmp;
             BackColour = colour;
         }

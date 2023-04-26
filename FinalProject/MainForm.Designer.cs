@@ -48,7 +48,6 @@
             this.invertSelectionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpMePlsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.refreshMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainPictureBox = new System.Windows.Forms.PictureBox();
             this.selectFrameFolder = new System.Windows.Forms.FolderBrowserDialog();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
@@ -217,8 +216,7 @@
             // helpToolStripMenuItem
             // 
             this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.helpMePlsToolStripMenuItem,
-            this.refreshMenuItem});
+            this.helpMePlsToolStripMenuItem});
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             this.helpToolStripMenuItem.Size = new System.Drawing.Size(84, 36);
             this.helpToolStripMenuItem.Text = "Help";
@@ -226,15 +224,8 @@
             // helpMePlsToolStripMenuItem
             // 
             this.helpMePlsToolStripMenuItem.Name = "helpMePlsToolStripMenuItem";
-            this.helpMePlsToolStripMenuItem.Size = new System.Drawing.Size(304, 44);
+            this.helpMePlsToolStripMenuItem.Size = new System.Drawing.Size(302, 44);
             this.helpMePlsToolStripMenuItem.Text = "Help me pls ;-;";
-            // 
-            // refreshMenuItem
-            // 
-            this.refreshMenuItem.Name = "refreshMenuItem";
-            this.refreshMenuItem.Size = new System.Drawing.Size(304, 44);
-            this.refreshMenuItem.Text = "Refresh canvas";
-            this.refreshMenuItem.Click += new System.EventHandler(this.refreshMenuItem_Click);
             // 
             // mainPictureBox
             // 
@@ -273,6 +264,7 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 961F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(1803, 961);
             this.tableLayoutPanel1.TabIndex = 4;
+            this.tableLayoutPanel1.Click += new System.EventHandler(this.tableLayoutPanel1_Click);
             // 
             // tableLayoutFrameSettings
             // 
@@ -300,6 +292,7 @@
             this.tableLayoutFrameSettings.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 91.4952F));
             this.tableLayoutFrameSettings.Size = new System.Drawing.Size(444, 955);
             this.tableLayoutFrameSettings.TabIndex = 4;
+            this.tableLayoutFrameSettings.Click += new System.EventHandler(this.tableLayoutFrameSettings_Click);
             // 
             // buttonBackground
             // 
@@ -385,8 +378,7 @@
             this.frameNumber.Name = "frameNumber";
             this.frameNumber.Size = new System.Drawing.Size(49, 31);
             this.frameNumber.TabIndex = 8;
-            this.frameNumber.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.frameNumber_KeyPress);
-            this.frameNumber.Leave += new System.EventHandler(this.frameNumber_Leave);
+            this.frameNumber.LostFocus += new System.EventHandler(this.frameNumber_LostFocus);
             // 
             // nextFrameButton
             // 
@@ -481,7 +473,6 @@
         private System.Windows.Forms.ToolStripMenuItem undoMenuItem;
         private System.Windows.Forms.ToolStripMenuItem redoMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-        private System.Windows.Forms.ToolStripMenuItem refreshMenuItem;
         private System.Windows.Forms.Button previousFrameButton;
         private System.Windows.Forms.TextBox frameNumber;
         private System.Windows.Forms.Button nextFrameButton;

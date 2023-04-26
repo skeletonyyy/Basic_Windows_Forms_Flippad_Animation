@@ -1,19 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Threading.Tasks;
-using System.Web.ModelBinding;
 using System.Windows.Forms;
-using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 
 namespace FinalProject
@@ -23,8 +15,6 @@ namespace FinalProject
         private Frame _currentFrame;
         private Stroke _currentStroke;
         private Project _project = new();
-        private Stack<(Bitmap, Stroke)> _undoStack = new();
-        private Stack<(Bitmap, Stroke)> _redoStack = new();
         public Size FrameSize;
         public bool IsDrawing;
         public bool UpdateBack;
@@ -119,27 +109,34 @@ namespace FinalProject
 
         private void undoMenuItem_Click(object sender, EventArgs e)
         {
-            if (_undoStack.Count > 0)
+            if (_currentFrame.UndoStack.Count > 0)
             {
-                (Bitmap, Stroke) bmp = _undoStack.Pop();
-                _redoStack.Push(bmp);
-                _currentFrame.Bitmap = bmp.Item1;
-                _currentFrame.Strokes.Remove(bmp.Item2);
-                _currentStroke = _currentFrame.Strokes.Last();
+                _currentFrame.RedoStack.Push(_currentFrame.UndoStack.Pop());
+                _currentFrame.Strokes.RemoveAt(_currentFrame.Strokes.Count - 1);
+                if (_currentFrame.Strokes.Count > 0)
+                    _currentStroke = _currentFrame.Strokes.Last();
+                else
+                    _currentStroke = new Stroke(0);
+                _currentFrame.Bitmap.Dispose();
+                _currentFrame.Bitmap = new Bitmap(FrameSize.Width, FrameSize.Height);
+                _currentFrame.updateBackColour(_currentFrame.BackColour);
                 UpdatePictureFrame(_currentFrame);
+                //mainPictureBox.Image = _currentFrame.Bitmap;
             }
         }
 
         private void redoMenuItem_Click(object sender, EventArgs e)
         {
-            if (_redoStack.Count > 0)
+            if (_currentFrame.RedoStack.Count > 0)
             {
-                (Bitmap, Stroke) bmp = _redoStack.Pop();
-                _redoStack.Push(bmp);
-                _currentFrame.Bitmap = bmp.Item1;
-                _currentFrame.Strokes.Add(bmp.Item2);
+                _currentFrame.UndoStack.Push(_currentFrame.RedoStack.Pop());
+                _currentFrame.Strokes.Add(_currentFrame.UndoStack.Peek());
                 _currentStroke = _currentFrame.Strokes.Last();
+                _currentFrame.Bitmap.Dispose();
+                _currentFrame.Bitmap = new Bitmap(FrameSize.Width, FrameSize.Height);
+                _currentFrame.updateBackColour(_currentFrame.BackColour);
                 UpdatePictureFrame(_currentFrame);
+                //mainPictureBox.Image = _currentFrame.Bitmap;
             }
         }
 
@@ -149,7 +146,7 @@ namespace FinalProject
 
         private void newFrameButton_Click(object sender, EventArgs e)
         {
-            _redoStack.Clear();
+            
             if (!_project.isEmpty())
             {
                 var frame = new Frame(_project.Frames.Count(),
@@ -159,7 +156,7 @@ namespace FinalProject
 
                 _currentFrame = frame;
                 _project.Frames.Add(frame);
-                _currentFrame.Index = frame.Index; // currentFrameIndex is the index of the frame in Frames[]
+                _currentFrame.Index = frame.Index;
                 UpdatePictureFrame(frame);
                 updateFrameCount();
                 if (_currentFrame.Index > 0)
@@ -232,12 +229,12 @@ namespace FinalProject
             }
         }
 
-        private void frameNumber_Leave(object sender, EventArgs e)
+        private void frameNumber_LostFocus(object sender, EventArgs e)
         {
             var index = 0;
             if (int.TryParse(frameNumber.Text, out index))
             {
-                changeFrame(index - 2);
+                changeFrame(index - 1);
             }
             else
             {
@@ -259,12 +256,30 @@ namespace FinalProject
             }
         }
 
+        private void tableLayoutPanel1_Click(object sender, EventArgs e)
+        {
+            // This is here literally just so that you can click away from the frame index box.
+            if (frameNumber.Focused)
+            {
+                tableLayoutPanel1.Focus();
+            }
+        }
+
+        private void tableLayoutFrameSettings_Click(object sender, EventArgs e)
+        {
+            // This is here literally just so that you can click away from the frame index box.
+            if (frameNumber.Focused)
+            {
+                tableLayoutPanel1.Focus();
+            }
+        }
+
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
         //      Drawing Controls
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
         private void mainPictureBox_MouseDown(object sender, MouseEventArgs e)
         {
-            _redoStack.Clear();
+            _currentFrame.RedoStack.Clear();
             if (_project.Frames.Count > 0)
             {
                 IsDrawing = true;
@@ -283,7 +298,7 @@ namespace FinalProject
 
         private void mainPictureBox_MouseMove(object sender, MouseEventArgs e)
         {
-            if (_project.Frames.Count > 0 && IsDrawing)
+            if (_project.Frames.Count > 0 && IsDrawing && e.Button == MouseButtons.Left)
             { 
                 var origin = mainPictureBox.PointToScreen(new Point(0, 0));
                 var point = new Point(MousePosition.X - origin.X, MousePosition.Y - origin.Y);
@@ -303,7 +318,9 @@ namespace FinalProject
                 _currentStroke = new Stroke(0); // deselect the stroke
                 UpdatePictureFrame(_currentFrame);
             }
+            _currentFrame.UndoStack.Push(_currentFrame.Strokes.Last());
         }
+
         private void mainPictureBox_Paint(object sender, PaintEventArgs e)
         {
             if (_currentFrame != null)
@@ -325,7 +342,7 @@ namespace FinalProject
                         g.DrawLine(pen, stroke.Points[i], stroke.Points[i + 1]);
                     }
                 }
-                _undoStack.Push((_currentFrame.Bitmap, _currentStroke));
+                ;
             }
         }
 
@@ -393,7 +410,7 @@ namespace FinalProject
         private void UpdatePictureFrame(Frame frame)
         {
             mainPictureBox.Image = frame.Bitmap;
-            mainPictureBox.Invalidate();
+            mainPictureBox.Update();
         }
 
         /// <summary>
@@ -410,8 +427,7 @@ namespace FinalProject
         }
 
         /// <summary>
-        /// Changes the current frame to the frame at the given index. Note that the user-inputed indices begin at 1 and not 0,
-        /// which is taken into account int this function.
+        /// Changes the current frame to the frame at the given index. The indices begin at 0.
         /// </summary>
         /// <param name="index"></param>
         public void changeFrame(int index)
@@ -425,19 +441,6 @@ namespace FinalProject
             else
             {
                 raiseErrorMessage("Invalid Frame Index", "Your frame index is invalid.");
-            }
-        }
-
-        private void refreshMenuItem_Click(object sender, EventArgs e)
-        {
-            Invalidate();
-        }
-
-        private void frameNumber_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            if (e.Equals(ConsoleKey.Enter))
-            {
-                
             }
         }
     }
