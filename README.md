@@ -33,7 +33,7 @@ You can either download the repo or find an exe file in the releases.
 
 ### In Depth Use
 
-![Interface](https://user-images.githubusercontent.com/122639193/234765731-f45f1fae-77a1-4114-90d9-848547a540ac.png)
+![Interface](https://user-images.githubusercontent.com/122639193/234766286-639ce15d-8eb6-4acd-8e8e-7100ea88f3d2.png)
 
 #### Menus
 There are currently four menus: File, Edit, Modes, Help.
