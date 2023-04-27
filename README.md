@@ -1,5 +1,7 @@
 # Flip-a-Gif!
 
+![myProject](https://user-images.githubusercontent.com/122639193/234764215-6d010a68-c95c-40a3-a807-73c220ddf79d.gif)
+
 Flip-a-Gif is a simple Windows Form program that lets users create animated Gifs by free-drawing their animations on multiple frames. Users can create as many frames as they would like, pick the frame speed (e.g. 30fps, 60 fps, etc.), and save and open their projects.
 
 ## Description
@@ -30,6 +32,8 @@ Libaries used:
 You can either download the repo or find an exe file in the releases.
 
 ### In Depth Use
+
+![Interface](https://user-images.githubusercontent.com/122639193/234765731-f45f1fae-77a1-4114-90d9-848547a540ac.png)
 
 #### Menus
 There are currently four menus: File, Edit, Modes, Help.
@@ -66,7 +70,7 @@ Once a project is created, a menu with the frames' settings will appear. Here is
 #### Status Bar
 The status bar at the bottom of the screen is there to help you in your project. It displays some basic information that you may find useful.
 
-* Project Name: Your project's name.
+* Project: Your project's name.
 * Frame: The index of the current frame.
 
 ## Help
